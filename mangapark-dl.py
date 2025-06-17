@@ -1,0 +1,132 @@
+import os
+import shutil
+import requests
+from PIL import Image
+from io import BytesIO
+import sys
+import argparse
+
+from alive_progress import alive_bar
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+parser = argparse.ArgumentParser(
+    prog = 'mangapark-dl', 
+    description='Downloads manga from mangapark v5.3 links',
+)
+
+parser.add_argument('link')
+parser.add_argument('-f', '--format')
+parser.add_argument('-p', '--path')
+
+args = parser.parse_args()
+print(args.link, args.format, args.path)
+
+src_url = args.link
+
+download_path = args.path
+if args.path == None: 
+    download_path = os.getcwd()
+
+formats = ["folders", "cbz"]
+format = args.format
+if not (args.format in formats):
+    format = formats[1]
+
+try: 
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable_cache")
+
+    driver = webdriver.Chrome(server = Service(), options=chrome_options)
+
+    driver.get('chrome://settings/clearBrowserData')
+    driver.find_element(By.XPATH,'//settings-ui').send_keys(Keys.ENTER)
+except: 
+    try: 
+        options = webdriver.SafariOptions()
+        driver = webdriver.Safari(options=options)
+    except: 
+        print("[ERROR] No supported browser detected, please install Chrome or Safari")
+        sys.exit(0)
+
+def downloadImg(url: str, path: str, name: str): 
+    # Download .webp image and converts to .png
+    try: 
+        response = requests.get(url)
+        if response.status_code == 200: 
+            webp_img = Image.open(BytesIO(response.content)).convert("RGBA")
+            webp_img.save(path, 'PNG')
+            print(f"[INFO] {name} saved as {path}")
+        else: 
+            print(f"[ERROR] Failed to download image. Status code: {response.status_code}")
+    except Exception as e: 
+        print(f"[ERROR] An error occured: {e}")
+
+def chapter_dl(link, no): 
+    page=driver.get(link)
+    elem = WebDriverWait(driver, 30).until(
+        EC.presence_of_element_located((By.XPATH, "//div[@data-name='image-item']//img"))
+    )
+
+    images = [image.get_attribute('src') for image in driver.find_elements(By.XPATH, "//div[@data-name='image-item']//img")]
+    folder_path = os.path.join(download_path, title, f"Ch. {no}")
+    os.mkdir(folder_path)
+    with alive_bar(len(images), title=f"[INFO] CHapter {no} progress: ") as bar: 
+        for i, image in enumerate(images): 
+            downloadImg(image, os.path.join(folder_path, f"{i+1}.png"), f"page {i+1}")
+            bar()
+    if format=="cbz": 
+        shutil.make_archive(folder_path, "zip", folder_path)
+        os.rename(folder_path+".zip", folder_path+".cbz")
+        shutil.rmtree(folder_path)
+
+print("[INFO] Searching...")
+driver.get(src_url)
+
+title = driver.title.split(" - ")[0]
+print("[INFO] Found manga: " + title)
+
+elem = WebDriverWait(driver, 30).until(
+    EC.presence_of_element_located((By.XPATH, "//div[@*[starts-with(name(), 'q:') and .='8t_8']]"))
+)
+chapter_links = driver.find_elements(By.XPATH, "//div[@*[starts-with(name(), 'q:') and .='8t_8']]")
+chapter_links = list(reversed([chapter.find_element(By.XPATH, ".//a").get_attribute('href') for chapter in chapter_links]))
+print(f"[INFO] Fetched {len(chapter_links)} chapters: " + title)
+
+try: 
+    shutil.rmtree(os.path.join(download_path, title))
+except FileNotFoundError: 
+    pass
+os.mkdir(os.path.join(download_path, title))
+
+print(f"[INFO] Created folder {os.getcwd()}/{title}")
+
+elem = WebDriverWait(driver, 30).until(
+    EC.presence_of_element_located((By.XPATH, "//img"))
+)
+cover_link = driver.find_element(By.XPATH, "//img").get_attribute('src')
+print("[INFO] Downloading cover")
+downloadImg(cover_link, os.path.join(download_path, title, "!cover.png"), "cover")
+
+print("[INFO] Downloading chapters...")
+i=1
+for link in chapter_links:
+    print(f"[INFO] Downloading chapter: {i}")
+    chapter_dl(link, i)
+    i+=1
+
+driver.quit()
+
+print("[INFO] Cleaning up...")
+
+try: 
+    shutil.rmtree("chrome")
+    shutil.rmtree("chromedriver")
+except: 
+    pass
+
+print("[INFO] Donwload complete.")
