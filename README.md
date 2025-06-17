@@ -1,6 +1,6 @@
 # mangapark-rl
 
-A folder/cbz downloader for manga from mangapark. Uses chrome OR safari drivers via selenium. 
+A folder/cbz downloader for manga from mangapark v5.3. Uses chrome OR safari drivers via selenium. 
 
 ## Usage
 Clone the repository and change into the directory. Optionally create a venv and run the command
