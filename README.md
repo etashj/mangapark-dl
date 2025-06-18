@@ -33,6 +33,7 @@ options:
   --no-cover            Skip the cover download. No effect in since chapter mode
   -s, --start START     index (starts at 1) of the first chapter to download, if not provided will start at 1
   -e, --end END         index (starts at 1) of the final chapter to download, if not provided defaults to last
+  --all-in-one, --aio   Puts all pages downloaded into a single folder (raw)/file (all other formats)
 ```
 
 For example, the following will download Yotsuba&! to `/Users/username/Documents/manga/Yotsuba&!` as cbz separated by chapter.

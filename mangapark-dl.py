@@ -29,6 +29,7 @@ parser.add_argument("-c", "--chapter",  help="downloads a chapter link instead o
 parser.add_argument("--no-cover", action="store_true", help="Skip the cover download. No effect in since chapter mode")
 parser.add_argument("-s", "--start", help='index (starts at 1) of the first chapter to download, if not provided will start at 1')
 parser.add_argument("-e", "--end", help="index (starts at 1) of the final chapter to download, if not provided defaults to last")
+parser.add_argument("--all-in-one", "--aio", action="store_true", help="Puts all pages downloaded into a single folder (raw)/file (all other formats)")
 
 args = parser.parse_args()
 
@@ -83,37 +84,47 @@ def downloadImg(url: str, path: str, name: str):
         print(f"[ERROR] An error occured: {e}")
 
 def chapter_dl(link, no): 
+    folder_path = os.path.join(download_path, title, f"Ch. {no}")
+    if format != "raw" and os.path.exists(folder_path+"."+format):
+        print(f"[INFO] Found chapter {no} already complete")
+        return
+    if format == "raw" and os.path.exists(os.path.join(folder_path, ".complete")): 
+        print(f"[INFO] Found chapter {no} already complete")
+        return
     page=driver.get(link)
     elem = WebDriverWait(driver, 30).until(
         EC.presence_of_element_located((By.XPATH, "//div[@data-name='image-item']//img"))
     )
 
     images = [image.get_attribute('src') for image in driver.find_elements(By.XPATH, "//div[@data-name='image-item']//img")]
-    folder_path = os.path.join(download_path, title, f"Ch. {no}")
-    if not os.path.isdir(os.path.join(download_path, title)):
+    if not os.path.isdir(folder_path):
         os.mkdir(folder_path)
     with alive_bar(len(images), title=f"[INFO] Chapter {no} progress: ") as bar: 
         for i, image in enumerate(images): 
-            if (not os.path.isfile(os.path.join(folder_path, f"{i+1}.png"))):
+            if (not os.path.exists(os.path.join(folder_path, f"{i+1}.png"))):
                 downloadImg(image, os.path.join(folder_path, f"{i+1}.png"), f"page {i+1}")
             bar()
-    if format=="cbz" or format=='zip': 
-        shutil.make_archive(folder_path, "zip", folder_path)
-        shutil.rmtree(folder_path)
-        print("[INFO] Converted to ZIP")
-        if format == 'cbz':
-            os.rename(folder_path+".zip", folder_path+".cbz")
-            print("[INFO] Converted to CBZ")
-    elif format=="pdf": 
-        images = []
-        files = os.listdir(folder_path)
-        files.sort()
-        images = [Image.open(os.path.join(folder_path,f)) for f in files]
-        del files
-        pdf_path=folder_path+".pdf"
-        images[0].save(pdf_path, "PDF", resolution=100.0, save_all=True, append_images=images[1:])
-        shutil.rmtree(folder_path)
-        print("[INFO] Converted to PDF")
+    if args.all_in_one == False: 
+        if format=="cbz" or format=='zip': 
+            shutil.make_archive(folder_path, "zip", folder_path)
+            shutil.rmtree(folder_path)
+            print("[INFO] Converted to ZIP")
+            if format == 'cbz':
+                os.rename(folder_path+".zip", folder_path+".cbz")
+                print("[INFO] Converted to CBZ")
+        elif format=="pdf": 
+            images = []
+            files = os.listdir(folder_path)
+            files.sort()
+            images = [Image.open(os.path.join(folder_path,f)) for f in files]
+            del files
+            pdf_path=folder_path+".pdf"
+            images[0].save(pdf_path, "PDF", resolution=100.0, save_all=True, append_images=images[1:])
+            shutil.rmtree(folder_path)
+            print("[INFO] Converted to PDF")
+    if format=="raw": 
+        with open(os.path.join(folder_path,".complete"), 'w'): 
+            pass
 
 print("[INFO] Searching...")
 driver.get(src_url)
@@ -161,6 +172,42 @@ if args.chapter==None:
         print(f"[INFO] Downloading chapter: {i}")
         chapter_dl(link, i)
         i+=1
+    
+    if format == "raw": 
+        for chapter_folder in os.scandir(os.path.join(download_path, title)): 
+            if os.path.isdir(chapter_folder) and os.path.exists(os.path.join(chapter_folder.path, ".complete")): 
+                os.remove(os.path.join(chapter_folder.path, ".complete"))
+
+    if args.all_in_one == True:
+        i=1
+        for chapter_folder in os.scandir(os.path.join(download_path, title)): 
+            if os.path.isdir(chapter_folder):
+                for img in os.scandir(chapter_folder): 
+                    if img.name != ".complete":
+                        os.rename(img.path, os.path.join(download_path, title, str(i)+"-"+img.name))
+                i+=1
+                shutil.rmtree(chapter_folder)
+        if format == "cbz" or format == "zip":
+            shutil.make_archive(os.path.join(download_path, title), "zip", os.path.join(download_path, title))
+            shutil.rmtree(os.path.join(download_path, title))
+            print("[INFO] Converted to ZIP")
+            if format == 'cbz':
+                os.rename(os.path.join(download_path, title)+".zip", os.path.join(download_path, title)+".cbz")
+                print("[INFO] Converted to CBZ")
+        elif format == 'pdf': 
+            print("[INFO] Making PDF")
+            images = []
+            files = os.listdir(os.path.join(download_path, title))
+            files.sort()
+            for f in files: 
+                try: images.append(Image.open(os.path.join(download_path, title, f)))
+                except: pass
+            del files
+            pdf_path=os.path.join(download_path, title)+".pdf"
+            images[0].save(pdf_path, "PDF", resolution=100.0, save_all=True, append_images=images[1:])
+            shutil.rmtree(os.path.join(download_path, title))
+            print("[INFO] PDF Created")
+
 else: 
     title = driver.title.split(" - ")[0]
     print("[INFO] Found manga: " + title)
