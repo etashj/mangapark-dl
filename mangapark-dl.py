@@ -13,6 +13,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+
 parser = argparse.ArgumentParser(
     prog = 'mangapark-dl', 
     description='Downloads manga from mangapark v5.3 links',
@@ -41,10 +44,10 @@ try:
     chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable_cache")
 
-    driver = webdriver.Chrome(server = Service(), options=chrome_options)
+    driver = webdriver.Chrome(service = Service(), options=chrome_options)
 
-    driver.get('chrome://settings/clearBrowserData')
-    driver.find_element(By.XPATH,'//settings-ui').send_keys(Keys.ENTER)
+    #driver.get('chrome://settings/clearBrowserData')
+    #driver.find_element(By.XPATH,'//settings-ui').send_keys(Keys.ENTER)
 except: 
     try: 
         options = webdriver.SafariOptions()
