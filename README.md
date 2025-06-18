@@ -3,6 +3,7 @@
  - This project is for educational purposes only. I do not condone piracy and am not affiliated with MangaPark in any way. 
 
 ## Installation
+Tested on Python 3.9 and 3.13. 
 Clone the repository and change into the directory. Optionally create a venv and run the command
 ```
 git clone https://github.com/etashj/mangapark-dl
