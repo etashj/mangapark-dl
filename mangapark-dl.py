@@ -24,9 +24,10 @@ parser = argparse.ArgumentParser(
 parser.add_argument('link')
 parser.add_argument('-f', '--format', help="raw, zip, cbz, pdf")
 parser.add_argument('-p', '--path', help="The path in which the download directory should be created")
+parser.add_argument('--force-safari', '--safari', action="store_true", help='MAC ONLY. Force safari browser')
 
 args = parser.parse_args()
-print(args.link, args.format, args.path)
+print(args.link, args.format, args.path, args.force_safari)
 
 src_url = args.link
 
@@ -35,20 +36,29 @@ if args.path == None:
     download_path = os.getcwd()
 
 formats = ["raw", "zip", "cbz", "pdf"]
-format = args.format.strip().lower()
-if not (args.format.strip().lower() in formats):
+try: format = args.format.strip().lower()
+except: pass
+if args.format == None or not (args.format.strip().lower() in formats):
     format = formats[1]
 
-try: 
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable_cache")
+if force_safari == False: 
+    try: 
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable_cache")
 
-    driver = webdriver.Chrome(service = Service(), options=chrome_options)
+        driver = webdriver.Chrome(service = Service(), options=chrome_options)
 
-    #driver.get('chrome://settings/clearBrowserData')
-    #driver.find_element(By.XPATH,'//settings-ui').send_keys(Keys.ENTER)
-except: 
+        #driver.get('chrome://settings/clearBrowserData')
+        #driver.find_element(By.XPATH,'//settings-ui').send_keys(Keys.ENTER)
+    except: 
+        try: 
+            options = webdriver.SafariOptions()
+            driver = webdriver.Safari(options=options)
+        except: 
+            print("[ERROR] No supported browser detected, please install Chrome or Safari")
+            sys.exit(0)
+else: 
     try: 
         options = webdriver.SafariOptions()
         driver = webdriver.Safari(options=options)
