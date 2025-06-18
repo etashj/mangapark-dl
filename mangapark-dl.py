@@ -22,8 +22,8 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('link')
-parser.add_argument('-f', '--format')
-parser.add_argument('-p', '--path')
+parser.add_argument('-f', '--format', help="raw, zip, cbz, pdf")
+parser.add_argument('-p', '--path', help="The path in which the download directory should be created")
 
 args = parser.parse_args()
 print(args.link, args.format, args.path)
@@ -34,7 +34,7 @@ download_path = args.path
 if args.path == None: 
     download_path = os.getcwd()
 
-formats = ["folder", "zip", "cbz", "pdf"]
+formats = ["raw", "zip", "cbz", "pdf"]
 format = args.format.strip().lower()
 if not (args.format.strip().lower() in formats):
     format = formats[1]
