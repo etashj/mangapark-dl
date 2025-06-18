@@ -35,8 +35,8 @@ if args.path == None:
     download_path = os.getcwd()
 
 formats = ["folder", "zip", "cbz", "pdf"]
-format = args.format
-if not (args.format.strip() in formats):
+format = args.format.strip().lower()
+if not (args.format.strip().lower() in formats):
     format = formats[1]
 
 try: 
