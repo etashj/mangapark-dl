@@ -25,9 +25,12 @@ parser.add_argument('link')
 parser.add_argument('-f', '--format', help="raw, zip, cbz, pdf")
 parser.add_argument('-p', '--path', help="The path in which the download directory should be created")
 parser.add_argument('--force-safari', '--safari', action="store_true", help='MAC ONLY. Force safari browser')
+parser.add_argument("-c", "--chapter",  help="downloads a chapter link instead of full manga. You must provide a chapter number as argument.")
+parser.add_argument("--no-cover", action="store_true", help="Skip the cover download. No effect in since chapter mode")
+parser.add_argument("-s", "--start", help='index (starts at 1) of the first chapter to download, if not provided will start at 1')
+parser.add_argument("-e", "--end", help="index (starts at 1) of the final chapter to download, if not provided defaults to last")
 
 args = parser.parse_args()
-print(args.link, args.format, args.path, args.force_safari)
 
 src_url = args.link
 
@@ -41,7 +44,7 @@ except: pass
 if args.format == None or not (args.format.strip().lower() in formats):
     format = formats[1]
 
-if force_safari == False: 
+if args.force_safari == False: 
     try: 
         chrome_options = Options()
         chrome_options.add_argument("--headless")
@@ -113,37 +116,63 @@ def chapter_dl(link, no):
 print("[INFO] Searching...")
 driver.get(src_url)
 
-title = driver.title.split(" - ")[0]
-print("[INFO] Found manga: " + title)
 
-elem = WebDriverWait(driver, 30).until(
-    EC.presence_of_element_located((By.XPATH, "//div[@*[starts-with(name(), 'q:') and .='8t_8']]"))
-)
-chapter_links = driver.find_elements(By.XPATH, "//div[@*[starts-with(name(), 'q:') and .='8t_8']]")
-chapter_links = list(reversed([chapter.find_element(By.XPATH, ".//a").get_attribute('href') for chapter in chapter_links]))
-print(f"[INFO] Fetched {len(chapter_links)} chapters: " + title)
+if args.chapter==None: 
+    title = driver.title.split(" - ")[0]
+    print("[INFO] Found manga: " + title)
 
-try: 
-    shutil.rmtree(os.path.join(download_path, title))
-except FileNotFoundError: 
-    pass
-os.mkdir(os.path.join(download_path, title))
+    elem = WebDriverWait(driver, 30).until(
+        EC.presence_of_element_located((By.XPATH, "//div[@*[starts-with(name(), 'q:') and .='8t_8']]"))
+    )
+    chapter_links = driver.find_elements(By.XPATH, "//div[@*[starts-with(name(), 'q:') and .='8t_8']]")
+    chapter_links = list(reversed([chapter.find_element(By.XPATH, ".//a").get_attribute('href') for chapter in chapter_links]))
+    print(f"[INFO] Fetched {len(chapter_links)} chapters: " + title)
 
-print(f"[INFO] Created folder {os.getcwd()}/{title}")
+    if not os.path.isdir(os.path.join(download_path, title)):
+        os.mkdir(os.path.join(download_path, title))
+        print(f"[INFO] Created folder {os.path.join(download_path, title)}")
+    else: 
+         print(f"[INFO] Found folder {os.path.join(download_path, title)}")
+    
+    if not args.no_cover: 
+        elem = WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.XPATH, "//img"))
+        )
+        cover_link = driver.find_element(By.XPATH, "//img").get_attribute('src')
+        print("[INFO] Downloading cover")
+        downloadImg(cover_link, os.path.join(download_path, title, "!cover.png"), "cover")
+    
+    i = 1
+    print(chapter_links)
+    if args.start != None and args.end!= None: 
+        print("wahoo")
+        chapter_links = chapter_links[int(args.start)-1:int(args.end)]
+        i=int(args.start)
+    elif args.start != None and args.end == None: 
+        chapter_links = chapter_links[int(args.start)-1:]
+        i=int(args.start)
+    elif args.start == None and args.end != None: 
+        chapter_links = chapter_links[:int(args.end)]
+    else: 
+        pass
+    print(chapter_links)
+    print("[INFO] Downloading chapters...")
+    for link in chapter_links:
+        print(f"[INFO] Downloading chapter: {i}")
+        chapter_dl(link, i)
+        i+=1
+else: 
+    title = driver.title.split(" - ")[0]
+    print("[INFO] Found manga: " + title)
+    if not os.path.isdir(os.path.join(download_path, title)):
+        os.mkdir(os.path.join(download_path, title))
+        print(f"[INFO] Created folder {os.path.join(download_path, title)}")
+    else: 
+         print(f"[INFO] Found folder {os.path.join(download_path, title)}")
+    print("[INFO] Downloading chapter")
+    chapter_dl(src_url, args.chapter)
 
-elem = WebDriverWait(driver, 30).until(
-    EC.presence_of_element_located((By.XPATH, "//img"))
-)
-cover_link = driver.find_element(By.XPATH, "//img").get_attribute('src')
-print("[INFO] Downloading cover")
-downloadImg(cover_link, os.path.join(download_path, title, "!cover.png"), "cover")
 
-print("[INFO] Downloading chapters...")
-i=1
-for link in chapter_links:
-    print(f"[INFO] Downloading chapter: {i}")
-    chapter_dl(link, i)
-    i+=1
 
 driver.quit()
 
