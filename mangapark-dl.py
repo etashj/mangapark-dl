@@ -31,9 +31,9 @@ download_path = args.path
 if args.path == None: 
     download_path = os.getcwd()
 
-formats = ["folders", "cbz"]
+formats = ["folder", "zip", "cbz", "pdf"]
 format = args.format
-if not (args.format in formats):
+if not (args.format.strip() in formats):
     format = formats[1]
 
 try: 
@@ -75,14 +75,27 @@ def chapter_dl(link, no):
     images = [image.get_attribute('src') for image in driver.find_elements(By.XPATH, "//div[@data-name='image-item']//img")]
     folder_path = os.path.join(download_path, title, f"Ch. {no}")
     os.mkdir(folder_path)
-    with alive_bar(len(images), title=f"[INFO] CHapter {no} progress: ") as bar: 
+    with alive_bar(len(images), title=f"[INFO] Chapter {no} progress: ") as bar: 
         for i, image in enumerate(images): 
             downloadImg(image, os.path.join(folder_path, f"{i+1}.png"), f"page {i+1}")
             bar()
-    if format=="cbz": 
+    if format=="cbz" or format=='zip': 
         shutil.make_archive(folder_path, "zip", folder_path)
-        os.rename(folder_path+".zip", folder_path+".cbz")
         shutil.rmtree(folder_path)
+        print("[INFO] Converted to ZIP")
+        if format == 'cbz':
+            os.rename(folder_path+".zip", folder_path+".cbz")
+            print("[INFO] Converted to CBZ")
+    elif format=="pdf": 
+        images = []
+        files = os.listdir(folder_path)
+        files.sort()
+        images = [Image.open(os.path.join(folder_path,f)) for f in files]
+        del files
+        pdf_path=folder_path+".pdf"
+        images[0].save(pdf_path, "PDF", resolution=100.0, save_all=True, append_images=images[1:])
+        shutil.rmtree(folder_path)
+        print("[INFO] Converted to PDF")
 
 print("[INFO] Searching...")
 driver.get(src_url)

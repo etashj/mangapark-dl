@@ -8,7 +8,7 @@ pip install -r requirements.txt
 
 Then use the following command to download manga
 ```
-python mangapark-dl-py [link] --path [download path] --format [folder, cbz]
+python mangapark-dl-py [link] --path [download path] --format [folder, cbz, zip]
 ```
 
 For example, the following will download Yotsuba&! to `/Users/username/Documents/manga/Yotsuba&!` as cbz separated by chapter.
