@@ -90,10 +90,12 @@ def chapter_dl(link, no):
 
     images = [image.get_attribute('src') for image in driver.find_elements(By.XPATH, "//div[@data-name='image-item']//img")]
     folder_path = os.path.join(download_path, title, f"Ch. {no}")
-    os.mkdir(folder_path)
+    if not os.path.isdir(os.path.join(download_path, title)):
+        os.mkdir(folder_path)
     with alive_bar(len(images), title=f"[INFO] Chapter {no} progress: ") as bar: 
         for i, image in enumerate(images): 
-            downloadImg(image, os.path.join(folder_path, f"{i+1}.png"), f"page {i+1}")
+            if (not os.path.isfile(os.path.join(folder_path, f"{i+1}.png"))):
+                downloadImg(image, os.path.join(folder_path, f"{i+1}.png"), f"page {i+1}")
             bar()
     if format=="cbz" or format=='zip': 
         shutil.make_archive(folder_path, "zip", folder_path)
@@ -134,7 +136,7 @@ if args.chapter==None:
     else: 
          print(f"[INFO] Found folder {os.path.join(download_path, title)}")
     
-    if not args.no_cover: 
+    if (not args.no_cover) and (not os.path.isfile(os.path.join(download_path,title,"!cover.png"))): 
         elem = WebDriverWait(driver, 30).until(
             EC.presence_of_element_located((By.XPATH, "//img"))
         )
@@ -143,7 +145,6 @@ if args.chapter==None:
         downloadImg(cover_link, os.path.join(download_path, title, "!cover.png"), "cover")
     
     i = 1
-    print(chapter_links)
     if args.start != None and args.end!= None: 
         print("wahoo")
         chapter_links = chapter_links[int(args.start)-1:int(args.end)]
@@ -155,7 +156,6 @@ if args.chapter==None:
         chapter_links = chapter_links[:int(args.end)]
     else: 
         pass
-    print(chapter_links)
     print("[INFO] Downloading chapters...")
     for link in chapter_links:
         print(f"[INFO] Downloading chapter: {i}")
