@@ -1,6 +1,6 @@
 # mangapark-dl
  - A folder/cbz downloader for manga from mangapark v5.3. Uses chrome OR safari drivers via selenium.
- - This project is for educational purposes only. I do not condone piracy. 
+ - This project is for educational purposes only. I do not condone piracy and am not affiliated with MangaPark in any way. 
 
 ## Installation
 Clone the repository and change into the directory. Optionally create a venv and run the command
