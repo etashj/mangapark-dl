@@ -106,6 +106,8 @@ def chapter_dl(link, no):
             bar()
     if args.all_in_one == False: 
         if format=="cbz" or format=='zip': 
+            try: os.remove(os.path.join(folder_path, ".complete"))
+            except: pass
             shutil.make_archive(folder_path, "zip", folder_path)
             shutil.rmtree(folder_path)
             print("[INFO] Converted to ZIP")
@@ -113,6 +115,8 @@ def chapter_dl(link, no):
                 os.rename(folder_path+".zip", folder_path+".cbz")
                 print("[INFO] Converted to CBZ")
         elif format=="pdf": 
+            try: os.remove(os.path.join(folder_path, ".complete"))
+            except: pass
             images = []
             files = os.listdir(folder_path)
             files.sort()
