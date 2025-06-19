@@ -1,22 +1,35 @@
+Metadata-Version: 2.4
+Name: mangapark-dl
+Version: 0.0.1
+Summary: A folder/cbz downloader for manga from mangapark v5.3. Uses chrome OR safari drivers via selenium.
+Author-email: Etash J <etashjhanji@gmail.com>
+License-Expression: Unlicense
+Project-URL: Homepage, https://github.com/etashj/mangapark-dl
+Project-URL: Issues, https://github.com/etashj/mangapark-dl/issues
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Dynamic: license-file
+
 # mangapark-dl
  - A folder/cbz downloader for manga from mangapark v5.3. Uses chrome OR safari drivers via selenium.
  - This project is for educational purposes only. I do not condone piracy and am not affiliated with MangaPark in any way. 
 
 ## Installation
-Tested on Python 3.9 and 3.13.
-### Via `pip` and the PyPI
-Installing the cli tool is simple via pip. 
+Tested on Python 3.9 and 3.13. 
+Clone the repository and change into the directory. Optionally create a venv and run the command
 ```
-python -m pip install mangapark-dl
-```
-### For developers
-Clone the repository and install dependencies from `requirements.txt`. You can then run
-```
-python3 mangapark_dl/mangapark_dl.py [LINK] [OPTIONS]
+git clone https://github.com/etashj/mangapark-dl
+cd mangapark-dl
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ## Usage
-Use `mangapark-dl --help` to view the help message.
+Use `python mangapark-dl.py --help` to view the help message.
 ```
 usage: mangapark-dl [-h] [-f FORMAT] [-p PATH] [--force-safari] [-c CHAPTER] [--no-cover] [-s START] [-e END] link
 
@@ -41,7 +54,7 @@ options:
 
 For example, the following will download Yotsuba&! to `/Users/username/Documents/manga/Yotsuba&!` as cbz separated by chapter.
 ```
-mangapark.py "https://mangapark.io/title/11684-en-yotsuba" -p "/Users/username/Documents/manga/" -f "cbz"
+python mangapark-dl.py "https://mangapark.io/title/11684-en-yotsuba" -p "/Users/username/Documents/manga/" -f "cbz"
 ```
  - Note that the default option for path is the cwd and format defaults to cbz. Folder option gives you unzipped verzions of the cbz.
  - For safari usage, remote automation must be enabled and no headless mode is available.

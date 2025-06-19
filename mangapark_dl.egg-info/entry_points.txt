@@ -1,0 +1,2 @@
+[console_scripts]
+mangapark-dl = mangapark_dl.mangapark_dl:main

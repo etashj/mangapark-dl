@@ -1,0 +1,9 @@
+LICENSE
+README.md
+pyproject.toml
+mangapark_dl/mangapark_dl.py
+mangapark_dl.egg-info/PKG-INFO
+mangapark_dl.egg-info/SOURCES.txt
+mangapark_dl.egg-info/dependency_links.txt
+mangapark_dl.egg-info/entry_points.txt
+mangapark_dl.egg-info/top_level.txt
