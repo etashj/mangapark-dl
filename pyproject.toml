@@ -14,6 +14,12 @@ classifiers = [
 license = "Unlicense"
 license-files = ["LICENSE"]
 
+dependencies = [
+  'pillow',
+  'alive_progress', 
+  'selenium'
+]
+
 [project.urls]
 Homepage = "https://github.com/etashj/mangapark-dl"
 Issues = "https://github.com/etashj/mangapark-dl/issues"
